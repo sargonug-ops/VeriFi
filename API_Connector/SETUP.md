@@ -3,7 +3,7 @@
 ## What's in here
 
 ```
-backend-bridge/
+API_Connector/
 ├── CMakeLists.txt        # fetches cpp-httplib, nlohmann/json, cpr automatically
 ├── src/
 │   └── main.cpp           # GET /health, POST /chat (mock data), CORS, error handling
