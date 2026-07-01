@@ -33,19 +33,19 @@ export function ChatInput({
   }
 
   return (
-    <form className="chat-input" onSubmit={handleSubmit}>
+    <form className="chat-input-bar" onSubmit={handleSubmit}>
       <input
         type="text"
-        className="chat-input__field"
-        placeholder="Ask about Fidelity policy documents…"
+        className="chat-input-bar__field"
+        placeholder="Ask about IRA withdrawals, RMDs, fees, transfers, or beneficiaries…"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(e) => setValue(e.target.value)}
         disabled={disabled}
         aria-label="Your question"
       />
       <button
         type="submit"
-        className="chat-input__submit"
+        className="chat-input-bar__submit"
         disabled={disabled || !value.trim()}
       >
         Send

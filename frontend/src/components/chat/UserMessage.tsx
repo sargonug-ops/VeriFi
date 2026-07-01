@@ -5,7 +5,8 @@ interface UserMessageProps {
 export function UserMessage({ content }: UserMessageProps) {
   return (
     <div className="message message--user">
-      <p className="message__content">{content}</p>
+      <span className="message__avatar message__avatar--you">You</span>
+      <div className="message__bubble message__bubble--user">{content}</div>
     </div>
   );
 }

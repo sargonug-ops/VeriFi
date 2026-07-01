@@ -12,6 +12,10 @@ export interface SourceCitation {
   source_document: string;
   page_number: number;
   score: number;
+  /** Optional display title derived from the document section heading. */
+  title?: string;
+  /** Optional section reference, e.g. "§1.2" */
+  section?: string;
 }
 
 export interface ChatRequest {
