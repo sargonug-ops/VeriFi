@@ -9,7 +9,7 @@ export function AssistantMessage({ content, sources }: AssistantMessageProps) {
   return (
     <div className="message message--assistant">
       <span className="message__avatar message__avatar--fa">FA</span>
-      <div className="message__body">
+      <div className="message__bubble message__bubble--assistant">
         <p className="message__text">{content}</p>
         {sources.length > 0 && (
           <div className="citation-chips">
@@ -19,7 +19,11 @@ export function AssistantMessage({ content, sources }: AssistantMessageProps) {
                 className="citation-chip"
               >
                 {source.source_document}
-                {source.section ? ` ${source.section}` : source.page_number ? ` §${source.page_number}` : ""}
+                {source.section
+                  ? ` ${source.section}`
+                  : source.page_number
+                    ? ` §${source.page_number}`
+                    : ""}
               </span>
             ))}
           </div>
