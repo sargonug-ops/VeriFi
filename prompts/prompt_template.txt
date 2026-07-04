@@ -1,0 +1,24 @@
+SYSTEM:
+{system_prompt}
+
+USER QUESTION:
+{user_question}
+
+RETRIEVED DOCUMENT CHUNKS:
+{retrieved_chunks}
+
+TASK:
+Answer the user question using only the retrieved document chunks.
+
+If the chunks are not enough, say that the documents do not provide enough information.
+
+Return the answer in this format:
+
+Answer:
+<clear answer>
+
+Explanation:
+<short explanation based only on the chunks>
+
+Sources:
+- <document name>, page <page number>: <short reason this source supports the answer>
