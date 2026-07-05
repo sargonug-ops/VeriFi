@@ -1,37 +1,78 @@
+def clean_text(text):
+    if not text:
+        return ""
 
-#text: full page
-#max_chars: max chars per chunk
-#overlap: repeated chars
+    text = text.replace("\x07", " ")
+    text = " ".join(text.split())
+    return text
+
+
+def get_overlap_start(words, chunk_start, chunk_end, overlap):
+    if overlap <= 0:
+        return chunk_end
+
+    overlap_start = chunk_end
+    overlap_chars = 0
+
+    while overlap_start > chunk_start:
+        word = words[overlap_start - 1]
+        added_chars = len(word)
+
+        if overlap_chars > 0:
+            added_chars += 1
+
+        if overlap_chars + added_chars > overlap:
+            break
+
+        overlap_start -= 1
+        overlap_chars += added_chars
+
+    if overlap_start == chunk_start:
+        return chunk_end
+
+    return overlap_start
+
+
 def chunk_text(text, max_chars=1000, overlap=100):
-   
     if not text:
         return []
 
-    # text = " ".join(text.split())
-    text = text.replace("\x07", " ")
-    text = " ".join(text.split())   
+    text = clean_text(text)
+    words = text.split()
+
+    if not words:
+        return []
 
     chunks = []
     start = 0
 
-    while start < len(text):
-        end = start + max_chars
-        chunk = text[start:end].strip()
+    while start < len(words):
+        end = start
+        current_length = 0
 
+        while end < len(words):
+            word = words[end]
+            added_length = len(word) if current_length == 0 else len(word) + 1
+
+            if current_length > 0 and current_length + added_length > max_chars:
+                break
+
+            current_length += added_length
+            end += 1
+
+        chunk = " ".join(words[start:end])
         if chunk:
             chunks.append(chunk)
 
-        start = end - overlap
+        if end >= len(words):
+            break
 
-        if start < 0:
-            start = 0
+        start = get_overlap_start(words, start, end, overlap)
 
     return chunks
 
 
-#pages: output from from extract_pdf_text() in main
 def chunk_pages(pages, source_document, max_chars=1000, overlap=100):
-
     records = []
     chunk_index = 0
 
