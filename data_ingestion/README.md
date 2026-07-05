@@ -1,144 +1,214 @@
-## current chunking cuts off words and is not semantic
-
-## For Role 2 (Vector Store)
-
-The generated `output/chunks.jsonl` file is ready to load directly into the vector store. Each line contains one chunk of text along with its source document and page number. Right now there are no embeddings, so you'll need to either generate embeddings yourself or wait for the next ingestion update. For testing, you can load each JSON object into a `DocumentChunk` structure and verify parsing, metadata handling, indexing, and retrieval logic. The file format should remain stable, with future updates only adding fields (such as `embedding`) rather than changing existing ones.
-
-
 # Data Ingestion
 
-Reads Fidelity PDFs, extracts text, chunks it, and exports the chunks to a JSONL file for the vector store.
+Data ingestion is Role 1 of VeriFi. It turns verified Fidelity PDFs into chunk records that Role 2 can load into the vector store.
 
-## Files
-
-### main.py
-Runs the entire pipeline.
-
-### pdf_reader.py
-Reads a PDF and extracts text page-by-page.
-
-### chunker.py
-Splits extracted text into smaller chunks while keeping page metadata.
-
-### jsonl_writer.py
-Writes chunk records to `output/chunks.jsonl`.
-
-## Input
-
-Place PDFs in:
+Current pipeline:
 
 ```text
-source_files/
+PDF files -> page text -> word-safe chunks -> embeddings -> JSONL
 ```
 
-Current example:
-
-```text
-source_files/terms-and-conditions.pdf
-```
-
-## Output
-
-Generated file:
-=======
-# Data Ingestion
-
-This folder generates the JSONL input used by the vector store role.
-
-The pipeline reads Fidelity PDFs from `source_files/`, extracts text page-by-page, splits the text into readable chunks, generates an embedding for each chunk, and writes the final records to `output/chunks.jsonl`.
-
-## Vector Store Handoff
-
-Use this file as the vector database input:
->>>>>>> theirs
+Generated handoff file:
 
 ```text
 output/chunks.jsonl
 ```
 
-Each line is one complete JSON object. Read the file line-by-line, parse each line as JSON, and load each record into the vector store.
+## Quick Start
 
-Current output schema:
+Run these commands from the repo root:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+python data_ingestion/main.py
+```
+
+If `.venv` does not exist yet:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python data_ingestion/main.py
+```
+
+Expected output for the current sample PDF set:
+
+```text
+Documents: 2
+Pages: 6
+Chunks: 35
+Output written to: output/chunks.jsonl
+```
+
+The first run may take longer because Sentence Transformers downloads the embedding model.
+
+## Input Documents
+
+Put verified Fidelity PDFs directly in:
+
+```text
+source_files/
+```
+
+The pipeline automatically processes every `.pdf` file directly inside `source_files/`. Files are processed in sorted filename order so output is deterministic.
+
+Current source files:
+
+```text
+source_files/privacy.pdf
+source_files/terms-and-conditions.pdf
+```
+
+## What Role 2 Should Use
+
+Role 2 should read:
+
+```text
+output/chunks.jsonl
+```
+
+This is a JSONL file, not a normal JSON array. Each line is one independent JSON object.
+
+Correct loading approach:
+
+1. Open `output/chunks.jsonl`.
+2. Read one line at a time.
+3. Parse that line as JSON.
+4. Store the parsed chunk in the vector database.
+5. Use `embedding` for similarity search.
+6. Keep `text`, `source_document`, and `page_number` for answer context and citations.
+
+Do not parse the entire file as one JSON object.
+
+## Output Schema
+
+Each line has this shape:
 
 ```json
 {
   "chunk_index": 0,
-  "text": "...",
+  "text": "1 TERMS AND CONDITIONS For purposes of these Terms and Conditions...",
   "source_document": "terms-and-conditions.pdf",
   "page_number": 1,
-  "embedding": [0.0267, -0.0358, -0.072]
+  "embedding": [0.0267649535, -0.0358008891, -0.072021015]
 }
 ```
 
-Fields:
+Field contract:
 
-- `chunk_index`: zero-based chunk ID within the generated output file
-- `text`: chunk text to display or pass into RAG context
-- `source_document`: original PDF filename
-- `page_number`: one-based PDF page number for citation/debugging
-- `embedding`: numeric vector for semantic search
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `chunk_index` | integer | Zero-based chunk ID in the combined output file |
+| `text` | string | Human-readable chunk text to use in RAG context |
+| `source_document` | string | Original PDF filename |
+| `page_number` | integer | One-based page number from the source PDF |
+| `embedding` | array of numbers | Vector representation of `text` |
 
-For the current model, embeddings have length `384`.
+Current embedding details:
 
-## How To Regenerate The File
+| Property | Value |
+| --- | --- |
+| Model | `all-MiniLM-L6-v2` |
+| Library | `sentence-transformers` |
+| Vector length | `384` |
 
-Run all commands from the repo root.
+## Suggested Role 2 Data Shape
 
-Create a virtual environment if one does not already exist:
+For the C++ vector-store role, the record maps naturally to a struct like:
 
-```bash
-python3 -m venv .venv
+```cpp
+struct DocumentChunk {
+    int chunk_index;
+    std::string text;
+    std::string source_document;
+    int page_number;
+    std::vector<float> embedding;
+};
 ```
 
-Activate the virtual environment:
-
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the ingestion pipeline:
-
-```bash
-python data_ingestion/main.py
-```
-
-Expected output for the current sample PDF:
+For retrieval, search over `embedding`. After finding matching chunks, return `text` plus citation metadata:
 
 ```text
-Pages: 3
-Chunks: 17
-Output written to: output/chunks.jsonl
+source_document, page_number
 ```
 
-The first run may take longer because `sentence-transformers` downloads the embedding model.
-
-## Input PDF
-
-Current input:
+Example citation display:
 
 ```text
-source_files/terms-and-conditions.pdf
+terms-and-conditions.pdf, page 1
 ```
 
-The current pipeline is configured for this PDF in `data_ingestion/main.py`.
+## Validate The JSONL
 
-## Implementation Files
+Use this from the repo root after running ingestion:
 
-- `main.py`: runs the full pipeline
-- `pdf_reader.py`: extracts page text from PDFs using PyMuPDF
-- `chunker.py`: creates readable chunks without splitting words
-- `embedder.py`: generates embeddings using Sentence Transformers
-- `jsonl_writer.py`: writes one JSON object per line to JSONL
+```bash
+.venv/bin/python - <<'PY'
+import json
+from collections import Counter, defaultdict
+from pathlib import Path
 
-## Notes For Role 2
+path = Path("output/chunks.jsonl")
+records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+required = {"chunk_index", "text", "source_document", "page_number", "embedding"}
+pages_by_document = defaultdict(Counter)
 
-- Do not treat the whole JSONL file as one JSON array.
-- Preserve `source_document` and `page_number` so chatbot answers can cite where the information came from.
-- Use `text` as the human-readable context and `embedding` as the vector search input.
-- The output format is intended to stay stable. Future changes should add fields rather than rename or remove the existing fields.
+for record in records:
+    pages_by_document[record["source_document"]][record["page_number"]] += 1
+
+print("records:", len(records))
+print("missing required fields:", sum(1 for record in records if not required <= record.keys()))
+print("empty text chunks:", sum(1 for record in records if not record["text"]))
+print("contiguous chunk indexes:", [record["chunk_index"] for record in records] == list(range(len(records))))
+print("documents:", dict(sorted(Counter(record["source_document"] for record in records).items())))
+print("pages by document:", {doc: dict(sorted(pages.items())) for doc, pages in sorted(pages_by_document.items())})
+print("embedding lengths:", dict(sorted(Counter(len(record["embedding"]) for record in records).items())))
+print("all embedding values numeric:", all(isinstance(value, (int, float)) for record in records for value in record["embedding"]))
+PY
+```
+
+Expected current validation:
+
+```text
+records: 35
+missing required fields: 0
+empty text chunks: 0
+contiguous chunk indexes: True
+documents: {'privacy.pdf': 18, 'terms-and-conditions.pdf': 17}
+pages by document: {'privacy.pdf': {1: 8, 2: 5, 3: 5}, 'terms-and-conditions.pdf': {1: 6, 2: 7, 3: 4}}
+embedding lengths: {384: 35}
+all embedding values numeric: True
+```
+
+## File Overview
+
+| File | Purpose |
+| --- | --- |
+| `main.py` | Finds PDFs in `source_files/` and runs the complete ingestion pipeline |
+| `pdf_reader.py` | Extracts text from PDFs page-by-page using PyMuPDF |
+| `chunker.py` | Cleans text and creates chunks without splitting words |
+| `embedder.py` | Adds `embedding` arrays using Sentence Transformers |
+| `jsonl_writer.py` | Writes records to `output/chunks.jsonl` |
+
+## Format Stability
+
+The existing fields should be treated as stable:
+
+```text
+chunk_index
+text
+source_document
+page_number
+embedding
+```
+
+Future changes should add new fields instead of renaming or removing these fields. This lets Role 2 keep the same parser and `DocumentChunk` structure.
+
+## Known Limits
+
+- The pipeline processes `.pdf` files directly inside `source_files/`; it does not recursively scan nested folders.
+- Chunking is word-safe and keeps chunks around `1000` characters, but it is not semantic section chunking yet.
+- Embeddings are generated locally with Sentence Transformers, not through an external API.
+- The generated `output/chunks.jsonl` file can be recreated at any time by rerunning `python data_ingestion/main.py`.
