@@ -95,6 +95,12 @@ def main():
     print(f"Chunks: {len(chunks)}")
     print(f"Output written to: {OUTPUT_PATH}")
 
+    print(len(chunks[0]["embedding"]))
+    print(len(chunks[1]["embedding"]))
+    print(len(chunks[3]["embedding"]))
+    print(len(chunks[4]["embedding"]))
+    print(len(chunks[7]["embedding"]))
+
 
 if __name__ == "__main__":
     main()
