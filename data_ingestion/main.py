@@ -72,6 +72,7 @@ test commit 4
 
 from pdf_reader import extract_pdf_text
 from chunker import chunk_pages
+from embedder import add_embeddings
 from jsonl_writer import write_jsonl
 
 PDF_PATH = "source_files/terms-and-conditions.pdf"
@@ -85,6 +86,8 @@ def main():
         pages,
         source_document="terms-and-conditions.pdf"
     )
+
+    chunks = add_embeddings(chunks)
 
     write_jsonl(chunks, OUTPUT_PATH)
 
