@@ -1,0 +1,6 @@
+# ---------------------------------------------------------------------------
+# 1. Agentic Rules - set rules that the agent will follow, to be used only locally
+# ---------------------------------------------------------------------------
+
+agent-rules.md
+STUDY_GUIDE.md
