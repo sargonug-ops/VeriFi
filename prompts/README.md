@@ -1,4 +1,4 @@
-# Prompt Engineering and QA
+# Prompt Engineering, Integration and QA
 
 Author: Divya Machiraju  
 Role: Prompting + QA  

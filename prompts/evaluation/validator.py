@@ -2,8 +2,8 @@ def validate_response(response: dict) -> dict:
     """
     Basic QA checks for VeriFi responses.
 
-    This does not prove the answer is perfect, but it checks whether
-    the response follows the expected structure for Sprint 2 QA.
+    Checks whether the answer has the expected structure and whether
+    source citations match the project's frontend/API schema.
     """
     answer = response.get("answer", "")
     sources = response.get("sources", [])
@@ -11,10 +11,11 @@ def validate_response(response: dict) -> dict:
     checks = {
         "has_answer": bool(answer.strip()),
         "has_sources": len(sources) > 0,
-        "sources_have_doc": all("doc" in source for source in sources),
-        "sources_have_page": all("page" in source for source in sources),
-        "sources_have_snippet": all("snippet" in source for source in sources),
-        "avoids_empty_guessing": "I don't know" not in answer.lower(),
+        "sources_have_text": all("text" in source for source in sources),
+        "sources_have_source_document": all("source_document" in source for source in sources),
+        "sources_have_page_number": all("page_number" in source for source in sources),
+        "sources_have_score": all("score" in source for source in sources),
+        "answer_not_empty_guess": bool(answer.strip()),
     }
 
     checks["passed"] = all(checks.values())

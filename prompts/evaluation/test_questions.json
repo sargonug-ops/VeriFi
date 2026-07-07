@@ -40,5 +40,23 @@
     "category": "conflicting_sources",
     "question": "What is the deadline for submitting a reimbursement request?",
     "expected_behavior": "If sources disagree, mention the conflict and cite both sources."
+    },
+    {
+    "id": "QA-008",
+    "category": "empty_question",
+    "question": "",
+    "expected_behavior": "Do not generate a policy answer. Ask the user to enter a valid question."
+    },
+    {
+    "id": "QA-009",
+    "category": "unrelated_question",
+    "question": "What is the best restaurant near me?",
+    "expected_behavior": "Say the available financial policy documents do not provide enough information to answer."
+    },
+    {
+    "id": "QA-010",
+    "category": "multi_source_question",
+    "question": "What fees or penalties could apply when taking money out of an account?",
+    "expected_behavior": "Use only retrieved chunks, cite every source used, and avoid combining unsupported details."
     }
 ]
