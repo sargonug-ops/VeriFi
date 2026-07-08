@@ -85,38 +85,12 @@ public:
 
     std::size_t fetchSize() const;
     int dimension() const;
-    float magnitude(const std::vector<float>& vec) const;
 
 private:
-    /* ------------------------------------------------------------------
-       STUDY BANK — cosine_similarity (the math core; write this FIRST)
-       ------------------------------------------------------------------
-       Functions to study:
-       - std::sqrt (in <cmath>)
-       - (optional, AFTER a manual version works) std::inner_product in
-         <numeric> — compare it to your hand-rolled loop.
-       Math to be able to derive on paper before typing:
-       - dot(a,b) = sum over i of a[i]*b[i]
-       - |a| = sqrt(sum of a[i]^2)
-       - cosine = dot / (|a| * |b|)
-       - WHY does this measure semantic similarity? One sentence about
-         angles between vectors. If you can't write that sentence, read
-         about cosine similarity for 10 more minutes.
-       Edge case YOU must decide:
-       - magnitude == 0 (all-zero vector) -> division by zero -> inf/nan,
-         SILENTLY. What do you return instead, and why is that defensible?
-       Efficiency observation (notice it, don't obsess):
-       - all three sums walk the same indices -> one loop can do all three.
-       HAND-CHECK ANCHOR (do this arithmetic on paper first):
-       - a={1,2,3}, b={4,5,6}: dot=32, |a|=sqrt(14), |b|=sqrt(77)
-         -> expect ~0.9746. Your function MUST print this.
-       ------------------------------------------------------------------ */
-    float cosine_similarity(const std::vector<float>& a,
-                            const std::vector<float>& b) const;
 
+    float cosine_similarity(const std::vector<float>& a, const std::vector<float>& b) const;
     float dotProduct(const std::vector<float>& vec1, const std::vector<float>& vec2) const;
-      
-
+    float magnitude(const std::vector<float>& vec) const;
 
     //Stores all Chunks                        
     std::vector<DocumentChunk> storage;

@@ -77,7 +77,7 @@ int VectorStore::dimension() const {
 
 float VectorStore::magnitude(const std::vector<float>& vec) const {
 
-    if (vec.empty()) return 0;
+    if (vec.empty()) return 0.0f;
     
     float squareSum {0.0f};
 
@@ -104,11 +104,11 @@ float VectorStore::magnitude(const std::vector<float>& vec) const {
     }
 
 
-//Each vector has 383 dimensions
+//Each vector has 384 dimensions
 //We are generating a single float value PER query, -1 - 1 ranking  
 // this value will be used to rank chunks, the higher the score the closer the chunk is to matching the user query 
 
-float const VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
+float VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
 
     const float queryMag = magnitude(queryFloat);
     const float dbMag = magnitude(dataBaseFloat);
