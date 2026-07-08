@@ -114,6 +114,10 @@ private:
     float cosine_similarity(const std::vector<float>& a,
                             const std::vector<float>& b) const;
 
+    float dotProduct(const std::vector<float>& vec1, const std::vector<float>& vec2) const;
+      
+
+
     //Stores all Chunks                        
     std::vector<DocumentChunk> storage;
     int expected_dim_ = 384;        // all-MiniLM-L6-v2 (ingestion's model)

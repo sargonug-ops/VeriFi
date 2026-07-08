@@ -19,6 +19,9 @@
        4) search              (needs 1 and 3 working)
    ============================================================================ */
 
+//using std::size_t = size;
+
+
 bool VectorStore::load_from_jsonl(const std::string& filepath) {
     // SHAPE OF THE SOLUTION (order of operations, not code):
     //   open -> check opened -> per-line loop -> skip blanks -> parse ->
@@ -68,26 +71,50 @@ std::size_t VectorStore::fetchSize() const {
 
 //Get width of embedding
 int VectorStore::dimension() const {
-    return DocumentChunk -> embedding.size();
+    if (storage.empty()) return 0;
+    return static_cast<int>storage[0].embedding.size();
 }
 
 float VectorStore::magnitude(const std::vector<float>& vec) const {
 
+    if (vec.empty()) return 0;
+    
     float squareSum {0.0f};
 
     for (std::size_t i {0}; i < vec.size(); i++) {
         squareSum += vec[i] * vec[i];
     } 
 
-    return sqrt(squareSum);
+    return std::sqrt(squareSum);
 }
+
+    float const VectorStore::dotProduct(const std::vector<float>& vec1, const std::vector<float>& vec2){
+
+        if (vec1.empty() || vec2.empty()) return 0.0f;
+        //Update to disclude this chunk in order to avoid polluting data 
+        if (vec1.size() != vec2.size()) return 0.0f;
+
+        float dotProductSum {0};
+
+        for (int i {0}; i < vec1.size(); i++) {
+            dotProductSum += (vec1[i] * vec2[i]);
+        }
+
+        return dotProductSum;
+    }
+
 
 //Each vector has 383 dimensions
 //We are generating a single float value PER query, -1 - 1 ranking  
 // this value will be used to rank chunks, the higher the score the closer the chunk is to matching the user query 
 
-float VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
+float const VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
 
-      float similarity = (dotProduct(queryFloat, dataBaseFloat)) / (magnitude(queryFloat) * magnitude(dataBaseFloat));
-    return similarity; 
+    const float queryMag = magnitude(queryFloat);
+    const float dbMag = magnitude(dataBaseFloat);
+
+    //return empty float
+    if (queryMag == 0.0f || dbMag == 0.0f) return 0.0f;
+    
+    return dotProduct(queryFloat, dataBaseFloat) / (queryMag * dbMag); 
 }

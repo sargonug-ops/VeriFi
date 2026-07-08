@@ -46,12 +46,12 @@ hallucination, though it does not eliminate it.
 
 Planned Stack: C++, React, Embedding API / LLM API 
 
-1. Data Ingestion Lead [NAME]: Sources public PDFs, writes parsing scripts to chunk dense text, and generates the initial vector embeddings.
+1. Data Ingestion Lead [Srushti]: Sources public PDFs, writes parsing scripts to chunk dense text, and generates the initial vector embeddings.
 
-2. Vector Store Engineer / Project Owner [Christopher Zarraga]: Designs the C++ memory structures, implements the cosine-similarity math, and optimizes the O(N) ranking.
+2. Vector Store Engineer / Project Owner [ChristopherZarraga]: Designs the C++ memory structures, implements the cosine-similarity math, and optimizes the O(N) ranking.
 
-3. API / Backend Bridge [NAME]: Implements the cpp-httplib C++ server, handles JSON serialization, and manages asynchronous network calls to the embedding and LLM APIs.
+3. API / Backend Bridge [Ethan]: Implements the cpp-httplib C++ server, handles JSON serialization, and manages asynchronous network calls to the embedding and LLM APIs.
 
-4. Frontend React Developer [NAME]: Builds the React chat dashboard, handles loading states, and renders the conversational UI with dynamic source citations.
+4. Frontend React Developer []: Builds the React chat dashboard, handles loading states, and renders the conversational UI with dynamic source citations.
 
-5. Integration, Prompting & QA [NAME]: Designs system prompts to keep the LLM grounded in retrieved text, tests edge cases, manages GitHub version control, and prepares the live final demonstration.
+5. Integration, Prompting & QA []: Designs system prompts to keep the LLM grounded in retrieved text, tests edge cases, manages GitHub version control, and prepares the live final demonstration.
