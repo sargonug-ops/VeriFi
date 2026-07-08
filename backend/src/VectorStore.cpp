@@ -61,15 +61,26 @@ std::vector<SearchResult> VectorStore::search(
     return {}; // TODO(you)
 }
 
-size_t VectorStore::size() const {
-    return 0; // TODO(you): one line
+//Get total chunks 
+std::size_t VectorStore::fetchSize() const {
+    return storage.size();
 }
 
+//Get width of embedding
 int VectorStore::dimension() const {
-    return 0; // TODO(you): one line
+    return 0;
 }
 
-int VectorStore::magnitude() const {
+float VectorStore::magnitude(const std::vector<float>& vec) const {
+
+    float magnitude {};
+
+    for (std::size_t i = 0; i < vec.size(); i++) {
+
+
+    } 
+
+
 
     return magnitude;
 }
@@ -77,7 +88,7 @@ int VectorStore::magnitude() const {
 
 float VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
 
-    cosine_similarity = (A * B) / ||A|| * ||B||
+  //  cosine_similarity = (A * B) / ||A|| * ||B||
 
 
 
