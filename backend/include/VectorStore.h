@@ -88,8 +88,9 @@ public:
        - These exist so the TEST DRIVER can verify loading. Trivial code,
          real purpose: observability.
        ------------------------------------------------------------------ */
-    size_t size() const;
+    std::size_t size() const;
     int dimension() const;
+    int magnitude() const;
 
 private:
     /* ------------------------------------------------------------------

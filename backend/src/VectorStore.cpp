@@ -69,17 +69,23 @@ int VectorStore::dimension() const {
     return 0; // TODO(you): one line
 }
 
-float VectorStore::cosine_similarity(const std::vector<float>& a,
-                                     const std::vector<float>& b) const {
-    // WRITE THIS FUNCTION FIRST. On paper first, then in code.
-    //
-    // THINK ABOUT:
-    // - Your accumulators: what type? (float vs double for a sum of 384
-    //   products — look up "float accumulation error"; either is
-    //   defensible at d=384, but KNOW you made a choice.)
-    // - The zero-magnitude edge case: decide, return, comment why.
-    // - One loop or three? Start with whatever you can hold in your head.
-    //
-    // VERIFY before moving on: a={1,2,3}, b={4,5,6} -> ~0.9746
+int VectorStore::magnitude() const {
+
+    return magnitude;
+}
+
+
+float VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
+
+    cosine_similarity = (A * B) / ||A|| * ||B||
+
+
+
+
+    //Each vector has 383 dimensions
+    //We are generating a single float value PER query, -1 - 1 ranking  
+    // this value will be used to rank chunks, the higher the score the closer the chunk is to matching the user query 
+
+
     return 0.0f; // TODO(you)
 }
