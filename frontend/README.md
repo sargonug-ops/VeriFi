@@ -1,6 +1,6 @@
 # VeriFi Frontend
 
-React chat UI for the VeriFi RAG pipeline. Sends policy questions to the C++ API bridge and displays grounded answers with source citations.
+React chat UI for the VeriFi RAG pipeline. Sends policy questions to the FastAPI backend and displays grounded answers with source citations.
 
 ## Setup
 
@@ -17,12 +17,22 @@ The app runs at `http://localhost:5173` by default.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_API_URL` | `http://localhost:8080` | Base URL for the API bridge |
-| `VITE_USE_MOCKS` | `true` | Set to `true` to use MSW mock responses during development |
+| `VITE_API_URL` | `/api` | Base URL for API calls. `/api` uses the Vite dev proxy (no CORS needed). Use `http://localhost:8000` for direct calls once CORS is configured. |
+| `VITE_USE_MOCKS` | `true` | Set to `true` for MSW mock responses; `false` to hit the real FastAPI backend. |
 
-Set `VITE_USE_MOCKS=false` once the real `API_Connector` backend is running.
+### Connecting to the real backend
 
-## API contract
+1. Start the FastAPI server (from `backend/`):
+   ```bash
+   cd backend
+   python3 -m venv venv && source venv/bin/activate
+   pip install -r requirements.txt
+   uvicorn main:app --reload --port 8000
+   ```
+2. Set `VITE_USE_MOCKS=false` in `.env`
+3. Keep `VITE_API_URL=/api` — the Vite proxy forwards `/api/*` to `localhost:8000` without requiring CORS changes
+
+## API contract (FastAPI — `backend/src/main.py`)
 
 ### `GET /health`
 
@@ -35,7 +45,7 @@ Set `VITE_USE_MOCKS=false` once the real `API_Connector` backend is running.
 Request:
 
 ```json
-{ "message": "What happens if a margin call is issued?" }
+{ "query": "What happens if a margin call is issued?" }
 ```
 
 Response:
@@ -45,22 +55,22 @@ Response:
   "answer": "If a margin call is issued...",
   "sources": [
     {
-      "text": "If a margin call is issued, the client must deposit funds within 3 days.",
-      "source_document": "Fidelity_Margin_Rules_2026.pdf",
-      "page_number": 12,
+      "doc": "terms-and-conditions.pdf",
+      "page": 12,
+      "snippet": "If a margin call is issued, the client must deposit funds within 3 days.",
       "score": 0.94
     }
   ]
 }
 ```
 
-Source citations use the same field names as the `DocumentChunk` struct (`text`, `source_document`, `page_number`), plus a `score` for relevance. Embeddings are not sent to the frontend.
+The frontend normalizes backend fields (`doc`, `page`, `snippet`) to internal UI types (`source_document`, `page_number`, `text`) in `src/api/normalize.ts`.
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server |
+| `npm run dev` | Start dev server with API proxy |
 | `npm run build` | Type-check and production build |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Run oxlint |
@@ -69,11 +79,12 @@ Source citations use the same field names as the `DocumentChunk` struct (`text`,
 
 ```
 src/
-├── api/           # fetch client, types, endpoint functions
+├── api/           # fetch client, types, normalize layer, endpoint functions
 ├── components/
 │   ├── chat/      # input, messages, empty state
 │   ├── citations/ # source cards and list
-│   └── layout/    # shell, connection status
+│   └── layout/    # shell, sidebars, connection status
 ├── hooks/         # useChat, useHealth
-└── mocks/         # MSW handlers for parallel development
+├── pages/         # LandingPage, ChatPage
+└── mocks/         # MSW handlers (return FastAPI wire format)
 ```
