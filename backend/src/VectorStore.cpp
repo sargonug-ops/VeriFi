@@ -68,35 +68,26 @@ std::size_t VectorStore::fetchSize() const {
 
 //Get width of embedding
 int VectorStore::dimension() const {
-    return 0;
+    return DocumentChunk -> embedding.size();
 }
 
 float VectorStore::magnitude(const std::vector<float>& vec) const {
 
-    float magnitude {};
+    float squareSum {0.0f};
 
-    for (std::size_t i = 0; i < vec.size(); i++) {
-
-
+    for (std::size_t i {0}; i < vec.size(); i++) {
+        squareSum += vec[i] * vec[i];
     } 
 
-
-
-    return magnitude;
+    return sqrt(squareSum);
 }
 
+//Each vector has 383 dimensions
+//We are generating a single float value PER query, -1 - 1 ranking  
+// this value will be used to rank chunks, the higher the score the closer the chunk is to matching the user query 
 
 float VectorStore::cosine_similarity(const std::vector<float>& queryFloat, const std::vector<float>& dataBaseFloat) const {
 
-  //  cosine_similarity = (A * B) / ||A|| * ||B||
-
-
-
-
-    //Each vector has 383 dimensions
-    //We are generating a single float value PER query, -1 - 1 ranking  
-    // this value will be used to rank chunks, the higher the score the closer the chunk is to matching the user query 
-
-
-    return 0.0f; // TODO(you)
+      float similarity = (dotProduct(queryFloat, dataBaseFloat)) / (magnitude(queryFloat) * magnitude(dataBaseFloat));
+    return similarity; 
 }

@@ -82,15 +82,10 @@ public:
     std::vector<SearchResult> search(const std::vector<float>& query_embedding,
                                      int top_k) const;
 
-    /* ------------------------------------------------------------------
-       STUDY BANK — the two one-liners
-       - size_t vs int for sizes -> look up: "why size_t"
-       - These exist so the TEST DRIVER can verify loading. Trivial code,
-         real purpose: observability.
-       ------------------------------------------------------------------ */
-    std::size_t size() const;
+
+    std::size_t fetchSize() const;
     int dimension() const;
-    int magnitude() const;
+    float magnitude(const std::vector<float>& vec) const;
 
 private:
     /* ------------------------------------------------------------------
@@ -119,6 +114,7 @@ private:
     float cosine_similarity(const std::vector<float>& a,
                             const std::vector<float>& b) const;
 
+    //Stores all Chunks                        
     std::vector<DocumentChunk> storage;
     int expected_dim_ = 384;        // all-MiniLM-L6-v2 (ingestion's model)
 };
