@@ -23,7 +23,7 @@ export function useChat() {
     const withUser = [...currentMessages, userMessage];
 
     mutation.mutate(
-      { message: trimmed },
+      { query: trimmed },
       {
         onSuccess: (response) => {
           const assistantMessage: ChatMessage = {

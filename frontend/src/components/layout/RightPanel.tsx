@@ -7,6 +7,7 @@ interface KnowledgeBaseDoc {
 }
 
 const KNOWLEDGE_BASE: KnowledgeBaseDoc[] = [
+  { id: "terms-and-conditions.pdf", label: "Terms & Conditions", description: "Official Fidelity terms and conditions (ingested PDF)" },
   { id: "IRA-POL-042",       label: "IRA Policy",              description: "Early withdrawal rules, exceptions, and penalty guidance" },
   { id: "RMD-GUIDE-2026",    label: "RMD Guide 2026",          description: "Required minimum distribution schedules and excise tax rules" },
   { id: "FEE-SCH-031",       label: "Fee Schedule",            description: "Retail brokerage commissions and service fee structure" },
@@ -24,8 +25,19 @@ interface RightPanelProps {
 
 export function RightPanel({ sources }: RightPanelProps) {
   const activeIds = new Set(sources.map((s) => s.source_document));
+  const knownIds = new Set(KNOWLEDGE_BASE.map((doc) => doc.id));
 
-  const activeDocs = KNOWLEDGE_BASE.filter((doc) => activeIds.has(doc.id));
+  const activeDocs: KnowledgeBaseDoc[] = [
+    ...KNOWLEDGE_BASE.filter((doc) => activeIds.has(doc.id)),
+    ...[...activeIds]
+      .filter((id) => !knownIds.has(id))
+      .map((id) => ({
+        id,
+        label: id.replace(/\.pdf$/i, "").replace(/_/g, " "),
+        description: "Retrieved from policy knowledge base",
+      })),
+  ];
+
   const inactiveDocs = KNOWLEDGE_BASE.filter((doc) => !activeIds.has(doc.id));
 
   function getSections(docId: string): string {
