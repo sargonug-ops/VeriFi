@@ -44,7 +44,7 @@ std::vector<SearchResult> VectorStore::search(
                 if (storage[index].embedding.empty()) continue;
                 if (storage[index].embedding.size() != expected_dim_) continue;
                 
-                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[x].embedding);
+                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[index].embedding);
                 score_pair.push_back(std::make_pair(score, index));
             
             }
@@ -54,17 +54,33 @@ std::vector<SearchResult> VectorStore::search(
             [](const std::pair<float, std::size_t>& a, const std::pair<float, std::size_t>& b)
             {return a.first > b.first});
 
-            if(!(score_pair[0].first > score_pair[1].first)){
-                std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
+            //remove later
+            if(score_pair.size() > 2){
+                if(!(score_pair[0].first > score_pair[1].first)){
+                    std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
+                }
             }
 
+            int N = score_pair.size();
+            int minChunks = std::min(top_k ,N);
 
+            if(minChunks == 0) return {};
 
-    //   chunk -> sort DESCENDING by score -> take first min(top_k, N) ->
-    //   package SearchResults -> return
-    //
+            std::vector<SearchResult> searchResult;
+            searchResult.reserve(minChunks);
 
-    return {};
+            for(int iter = 0; iter < minChunks; iter++){
+            
+                float score = score_pair[iter].first;
+                std::size_t chunk_index = score_pair[iter].second;
+                std::string docText = storage[chunk_index].text;
+                std::string docSource = storage[chunk_index].source_document;
+                int pageNum = storage[chunk_index].page_number;
+
+                searchResult.push_back({score, docText, docSource, pageNum});
+            }
+
+    return searchResult;
 }
 
 //Get total chunks 
