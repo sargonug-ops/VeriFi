@@ -5,22 +5,6 @@
 // TODO(you): #include the vendored nlohmann header. THINK: given your
 // compile command uses -Ilib, what exactly goes between the quotes/brackets?
 
-/* ============================================================================
-   STUDY BANK — this file as a whole
-   ----------------------------------------------------------------------------
-   - Note the `VectorStore::` prefix on every function — why is it required
-     here but absent in the header? -> look up: "scope resolution operator"
-   - This file NEVER defines main(). Why does that matter for who can link
-     against you? (You answered this earlier in the project — recall it.)
-   - Suggested implementation ORDER within this file:
-       1) cosine_similarity   (pure math, testable in isolation)
-       2) size / dimension    (one-liners; unlock the driver's checkpoints)
-       3) load_from_jsonl     (needs real chunks.jsonl on disk)
-       4) search              (needs 1 and 3 working)
-   ============================================================================ */
-
-//using std::size_t = size;
-
 
 bool VectorStore::load_from_jsonl(const std::string& filepath) {
     // SHAPE OF THE SOLUTION (order of operations, not code):
@@ -55,14 +39,23 @@ std::vector<SearchResult> VectorStore::search(
             //reserving up to storage.size() in space
             score_pair.reserve(storage.size());
 
-            for(auto x = 0; x < storage.size(); x++){ 
+            for(std::size_t index = 0; index < storage.size(); ++index){ 
                 //check if embedding empty, skip if true - skip if chunk not the same size as dim expected
-                if (storage[x].embedding.empty()) continue;
-                if (storage[x].embedding.size() != expected_dim_) continue;
+                if (storage[index].embedding.empty()) continue;
+                if (storage[index].embedding.size() != expected_dim_) continue;
                 
-                float score = cosine_similarity(query_embedding, storage[x].embedding);
-
+                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[x].embedding);
+                score_pair.push_back(std::make_pair(score, index));
             
+            }
+
+            //lambda function for sorting by descending - sort<> defaults to ascends
+            std::sort(score_pair.begin(), score_pair.end(), 
+            [](const std::pair<float, std::size_t>& a, const std::pair<float, std::size_t>& b)
+            {return a.first > b.first});
+
+            if(!(score_pair[0].first > score_pair[1].first)){
+                std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
             }
 
 
@@ -71,16 +64,7 @@ std::vector<SearchResult> VectorStore::search(
     //   package SearchResults -> return
     //
 
-    // - Your comparator decides the sort direction. After sorting, print
-    //   the first pair's score in the driver: is it the LARGEST? If not,
-    //   your comparator answered the wrong question.
-    // - Loop indices: storage[i].embedding is the chunk's vector; i is
-    //   what you keep in the pair so you can find the chunk again later.
-    //
-    // WHEN STUCK, look up:
-    //   "std::sort lambda comparator descending"
-    //   "std::pair default comparison"
-    return {}; // TODO(you)
+    return {};
 }
 
 //Get total chunks 
