@@ -48,18 +48,29 @@ std::vector<SearchResult> VectorStore::search(
             if (query_embedding.empty()) return {};
             if (query_embedding.size() != static_cast<std::size_t>(expected_dim_)) return {};
             if (top_k <= 0) return {};
-            if (storage.empty() <= 0) return {};
+            if (storage.empty()) return {};
+
+            //Storing the {score, index} pair inside a fector - naming it score_pair
+            std::vector<std::pair<float, std::size_t>> score_pair;
+            //reserving up to storage.size() in space
+            score_pair.reserve(storage.size());
+
+            for(auto x = 0; x < storage.size(); x++){ 
+                //check if embedding empty, skip if true - skip if chunk not the same size as dim expected
+                if (storage[x].embedding.empty()) continue;
+                if (storage[x].embedding.size() != expected_dim_) continue;
+                
+                float score = cosine_similarity(query_embedding, storage[x].embedding);
 
             
+            }
 
 
 
     //   chunk -> sort DESCENDING by score -> take first min(top_k, N) ->
     //   package SearchResults -> return
     //
-    // THINK ABOUT while writing:
-    // - Write ALL guards first. An empty return {} is a valid answer to
-    //   invalid input — better than a crash inside the loop.
+
     // - Your comparator decides the sort direction. After sorting, print
     //   the first pair's score in the driver: is it the LARGEST? If not,
     //   your comparator answered the wrong question.
