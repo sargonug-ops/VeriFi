@@ -14,13 +14,20 @@ const queryClient = new QueryClient({
 async function enableMocking() {
   if (import.meta.env.VITE_USE_MOCKS !== "true") return;
   const { worker } = await import("./mocks/browser");
-  return worker.start({ onUnhandledRequest: "bypass" });
+  return worker.start({
+    onUnhandledRequest: "bypass",
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+  });
 }
+
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 enableMocking().then(() => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <QueryClientProvider client={queryClient}>
           <App />
         </QueryClientProvider>
