@@ -44,10 +44,16 @@ bool VectorStore::load_from_jsonl(const std::string& filepath) {
 
 std::vector<SearchResult> VectorStore::search(
         const std::vector<float>& query_embedding, int top_k) const {
-            if (query_embedding.empty()) {}
+            
+            if (query_embedding.empty()) return {};
+            if (query_embedding.size() != static_cast<std::size_t>(expected_dim_)) return {};
+            if (top_k <= 0) return {};
+            if (storage.empty() <= 0) return {};
 
-    // SHAPE OF THE SOLUTION:
-    //   guards -> build {score,index} pairs (reserve!) -> score every
+            
+
+
+
     //   chunk -> sort DESCENDING by score -> take first min(top_k, N) ->
     //   package SearchResults -> return
     //
