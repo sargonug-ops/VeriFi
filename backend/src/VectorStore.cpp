@@ -2,77 +2,58 @@
 #include <fstream>      // std::ifstream
 #include <cmath>        // std::sqrt
 #include <algorithm>    // std::sort, std::min
-// TODO(you): #include the vendored nlohmann header. THINK: given your
-// compile command uses -Ilib, what exactly goes between the quotes/brackets?
+#include <json.hpp>
+#include <cstdio>
+
 
 //used once in the beginning to fill storage
 bool VectorStore::load_from_jsonl(const std::string& filepath) {
-    // SHAPE OF THE SOLUTION (order of operations, not code):
-    //   open -> check opened -> per-line loop -> skip blanks -> parse ->
-    //   extract 5 fields -> validate dim -> build chunk -> push -> true
-    //
-    // THINK ABOUT while writing:
-    // - What does `if (!file)` actually test? -> "ifstream operator bool"
-    // - getline's return value IS the loop condition. Why does that idiom
-    //   terminate correctly at EOF?
-    // - Where does your dimension check go so a bad line can't enter
-    //   storage? What do you PRINT when you skip one (a count at the end
-    //   beats spam per line)?
-    //
-    // WHEN STUCK, look up (in this order):
-    //   "read file line by line c++ getline"
-    //   "nlohmann json parse string example"
-    //   "nlohmann json get vector"
-
-    /* ------------------------------------------------------------------
-       STUDY BANK — load_from_jsonl (Phase 1: runs once at startup)
-       ------------------------------------------------------------------
-       Functions/tools to study:
-       - std::ifstream            (open a file; how do you test it opened?)
-       - std::getline             (read ONE line; what's its loop idiom?)
-       - nlohmann::json::parse    (string -> json object; THROWS on bad input)
-       - j["field"].get<T>()      (typed extraction; works for
-                                   std::vector<float> directly!)
-       - try / catch              (what is std::exception::what()?)
-       - storage.push_back / storage.reserve
-       Concepts:
-       - JSONL vs JSON: why must you parse per-LINE, never the whole file?
-       - RAII: why is there no file.close() in modern C++ code?
-       Decisions YOU must make (comment your choice + why, in the code):
-       - A line's embedding.size() != expected_dim_: reject whole file,
-         or skip line + count skips? What does each mean for debugging?
-       - json::parse throws on a malformed line: crash loudly (fine in
-         dev) or catch-and-skip? Make it a CHOICE, not an accident.
-       ------------------------------------------------------------------ */
-    /*
-        // Mirrors ONE line of ingestion's output/chunks.jsonl exactly:
-        // {"chunk_index": 0, "text": "...", "source_document": "...",
-        //  "page_number": 1, "embedding": [ ... 384 floats ... ]}
-    */
+    storage.clear(); //in case ran more than once
 
     std::string readText = "";
+    std::ifstream myFile(filepath);
     
-    std::ifstream MyReadFile("output/chunks.jsonl");
-    if (!std::ifstream::is_open()){
-        std::printf();
+    //chcek if file opened successfully
+    
+    if (!myFile.is_open()){
+        std::printf("Error: Stopped at attempted opening file.");
+        return false;
+    }
+    int skipped {0};
+    while(std::getline(myFile, readText)) {
+        DocumentChunk chunk;
+
+        if(readText == "") continue;
+        
+        try{
+            nlohmann::json j = nlohmann::json::parse(line);
+            chunk.chunk_index = j["chunk_index"].get<int>();
+            chunk.text = j["text"].get<std::string>();
+            chunk.source_document = j["source_document"].get<std::string>();
+            chunk.page_number = j["page_number"].get<int>();
+            chunk.embedding = j["embedding"].get<std::vector<float>>();
+    
+            if (chunk.embedding.size() != static_cast<std::size_t>expected_dim_) {
+                skipped++; 
+                continue;
+            }
+    
+            storage.push_back(chunk);
+
+        } catch (const std::exception& e) {
+            skipped++;
+            continue;
+        }
     }
 
+    if (storage.empty()){ 
+        printf("Failed on storage.empty()\n");
+        return false;
+    } 
+    
+    std::printf("Success. Total Lines Skipped: %d", skipped);
 
-    while(getline (MyReadFile, readText)) {
-
-
-
-    }
-
-
-    //open file
-    //parse each line into documentchunk
-    //fill the storage
-
-
-
-
-    return false; 
+    return true; 
 }
 
 std::vector<SearchResult> VectorStore::search(
