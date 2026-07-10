@@ -5,7 +5,7 @@
 // TODO(you): #include the vendored nlohmann header. THINK: given your
 // compile command uses -Ilib, what exactly goes between the quotes/brackets?
 
-
+//used once in the beginning to fill storage
 bool VectorStore::load_from_jsonl(const std::string& filepath) {
     // SHAPE OF THE SOLUTION (order of operations, not code):
     //   open -> check opened -> per-line loop -> skip blanks -> parse ->
@@ -23,7 +23,56 @@ bool VectorStore::load_from_jsonl(const std::string& filepath) {
     //   "read file line by line c++ getline"
     //   "nlohmann json parse string example"
     //   "nlohmann json get vector"
-    return false; // TODO(you)
+
+    /* ------------------------------------------------------------------
+       STUDY BANK — load_from_jsonl (Phase 1: runs once at startup)
+       ------------------------------------------------------------------
+       Functions/tools to study:
+       - std::ifstream            (open a file; how do you test it opened?)
+       - std::getline             (read ONE line; what's its loop idiom?)
+       - nlohmann::json::parse    (string -> json object; THROWS on bad input)
+       - j["field"].get<T>()      (typed extraction; works for
+                                   std::vector<float> directly!)
+       - try / catch              (what is std::exception::what()?)
+       - storage.push_back / storage.reserve
+       Concepts:
+       - JSONL vs JSON: why must you parse per-LINE, never the whole file?
+       - RAII: why is there no file.close() in modern C++ code?
+       Decisions YOU must make (comment your choice + why, in the code):
+       - A line's embedding.size() != expected_dim_: reject whole file,
+         or skip line + count skips? What does each mean for debugging?
+       - json::parse throws on a malformed line: crash loudly (fine in
+         dev) or catch-and-skip? Make it a CHOICE, not an accident.
+       ------------------------------------------------------------------ */
+    /*
+        // Mirrors ONE line of ingestion's output/chunks.jsonl exactly:
+        // {"chunk_index": 0, "text": "...", "source_document": "...",
+        //  "page_number": 1, "embedding": [ ... 384 floats ... ]}
+    */
+
+    std::string readText = "";
+    
+    std::ifstream MyReadFile("output/chunks.jsonl");
+    if (!std::ifstream::is_open()){
+        std::printf();
+    }
+
+
+    while(getline (MyReadFile, readText)) {
+
+
+
+    }
+
+
+    //open file
+    //parse each line into documentchunk
+    //fill the storage
+
+
+
+
+    return false; 
 }
 
 std::vector<SearchResult> VectorStore::search(
@@ -44,7 +93,7 @@ std::vector<SearchResult> VectorStore::search(
                 if (storage[index].embedding.empty()) continue;
                 if (storage[index].embedding.size() != expected_dim_) continue;
                 
-                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[x].embedding);
+                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[index].embedding);
                 score_pair.push_back(std::make_pair(score, index));
             
             }
@@ -54,17 +103,33 @@ std::vector<SearchResult> VectorStore::search(
             [](const std::pair<float, std::size_t>& a, const std::pair<float, std::size_t>& b)
             {return a.first > b.first});
 
-            if(!(score_pair[0].first > score_pair[1].first)){
-                std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
+            //remove later
+            if(score_pair.size() > 2){
+                if(!(score_pair[0].first > score_pair[1].first)){
+                    std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
+                }
             }
 
+            int N = score_pair.size();
+            int minChunks = std::min(top_k ,N);
 
+            if(minChunks == 0) return {};
 
-    //   chunk -> sort DESCENDING by score -> take first min(top_k, N) ->
-    //   package SearchResults -> return
-    //
+            std::vector<SearchResult> searchResult;
+            searchResult.reserve(minChunks);
 
-    return {};
+            for(int iter = 0; iter < minChunks; iter++){
+            
+                float score = score_pair[iter].first;
+                std::size_t chunk_index = score_pair[iter].second;
+                std::string docText = storage[chunk_index].text;
+                std::string docSource = storage[chunk_index].source_document;
+                int pageNum = storage[chunk_index].page_number;
+
+                searchResult.push_back({score, docText, docSource, pageNum});
+            }
+
+    return searchResult;
 }
 
 //Get total chunks 
@@ -105,7 +170,6 @@ float VectorStore::magnitude(const std::vector<float>& vec) const {
 
         return dotProductSum;
     }
-
 
 //Each vector has 384 dimensions
 //We are generating a single float value PER query, -1 - 1 ranking  
