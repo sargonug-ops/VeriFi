@@ -15,6 +15,9 @@ const INTRO_MESSAGE: ChatMessage = {
   sources: [],
 };
 
+/** Survives React StrictMode remounts so landing ?q= is only auto-sent once. */
+const consumedLandingQueries = new Set<string>();
+
 function MessageList({ messages }: { messages: ChatMessage[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -41,12 +44,11 @@ function MessageList({ messages }: { messages: ChatMessage[] }) {
 }
 
 export default function ChatPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([INTRO_MESSAGE]);
   const [draft, setDraft] = useState("");
   const [activeQuestion, setActiveQuestion] = useState<string | null>(null);
   const { sendMessage, isLoading, error, resetError } = useChat();
-  const initialQuestionSent = useRef(false);
 
   const lastSources: SourceCitation[] =
     (
@@ -56,20 +58,39 @@ export default function ChatPage() {
     )?.sources ?? [];
 
   function handleSend(message: string) {
+    const trimmed = message.trim();
+    if (!trimmed || isLoading) return;
+
     resetError();
-    setActiveQuestion(message);
-    sendMessage(message, setMessages, messages);
+    setActiveQuestion(trimmed);
     setDraft("");
+    sendMessage(trimmed, setMessages);
   }
 
   // Auto-send question passed from landing page via ?q=
   useEffect(() => {
-    const q = searchParams.get("q");
-    if (q && !initialQuestionSent.current) {
-      initialQuestionSent.current = true;
-      handleSend(q);
-    }
-  }, []);
+    const q = searchParams.get("q")?.trim();
+    if (!q || consumedLandingQueries.has(q)) return;
+
+    // Defer until after mount/router settle so MSW and React Query are ready.
+    // On StrictMode's fake unmount, clear the timer and allow a real remount retry.
+    const timeoutId = window.setTimeout(() => {
+      if (consumedLandingQueries.has(q)) return;
+      consumedLandingQueries.add(q);
+
+      resetError();
+      setActiveQuestion(q);
+      setDraft("");
+      sendMessage(q, setMessages);
+      // Remove ?q= so refresh / remount doesn't re-trigger the same query.
+      setSearchParams({}, { replace: true });
+    }, 50);
+
+    return () => window.clearTimeout(timeoutId);
+    // Intentionally only keys on the querystring: send/reset are stable enough
+    // for a one-shot landing handoff and must not retrigger mid-request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="app-layout">

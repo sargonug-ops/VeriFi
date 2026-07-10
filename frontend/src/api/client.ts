@@ -1,4 +1,19 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
+function resolveApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_URL ?? "/api";
+
+  // Keep absolute env values as-is (http://localhost:8000, etc.).
+  if (/^https?:\/\//i.test(configured)) {
+    return configured.replace(/\/$/, "");
+  }
+
+  // Resolve relative paths against the page origin so navigations like
+  // / -> /chat?q=... always hit the same API base.
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  return new URL(configured, origin).toString().replace(/\/$/, "");
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiError extends Error {
   status: number;
