@@ -1,14 +1,4 @@
-// Manual test driver — the ONLY executable on the C++ side for now, which
-// makes it your component's living proof. Build:
-//   g++ -std=c++17 -Iinclude -Ilib src/VectorStore.cpp tests/test_vectorstore.cpp -o test_vs
-//
-// STUDY BANK — this file
-// - Why does main() live HERE and not in VectorStore.cpp? (One sentence.
-//   If you can't produce it, revisit "multiple definition of main".)
-// - Exit codes: `return 1` on failure is what makes this driver usable in
-//   scripts/CI later. -> look up: "process exit code convention"
-// - assert vs if+print: <cassert> is the quick tool; know its gotcha
-//   (-DNDEBUG silently removes asserts in release builds).
+
 #include <iostream>
 #include "VectorStore.h"
 
