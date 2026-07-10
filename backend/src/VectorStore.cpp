@@ -5,7 +5,7 @@
 // TODO(you): #include the vendored nlohmann header. THINK: given your
 // compile command uses -Ilib, what exactly goes between the quotes/brackets?
 
-
+//used once in the beginning to fill storage
 bool VectorStore::load_from_jsonl(const std::string& filepath) {
     // SHAPE OF THE SOLUTION (order of operations, not code):
     //   open -> check opened -> per-line loop -> skip blanks -> parse ->
@@ -23,7 +23,56 @@ bool VectorStore::load_from_jsonl(const std::string& filepath) {
     //   "read file line by line c++ getline"
     //   "nlohmann json parse string example"
     //   "nlohmann json get vector"
-    return false; // TODO(you)
+
+    /* ------------------------------------------------------------------
+       STUDY BANK — load_from_jsonl (Phase 1: runs once at startup)
+       ------------------------------------------------------------------
+       Functions/tools to study:
+       - std::ifstream            (open a file; how do you test it opened?)
+       - std::getline             (read ONE line; what's its loop idiom?)
+       - nlohmann::json::parse    (string -> json object; THROWS on bad input)
+       - j["field"].get<T>()      (typed extraction; works for
+                                   std::vector<float> directly!)
+       - try / catch              (what is std::exception::what()?)
+       - storage.push_back / storage.reserve
+       Concepts:
+       - JSONL vs JSON: why must you parse per-LINE, never the whole file?
+       - RAII: why is there no file.close() in modern C++ code?
+       Decisions YOU must make (comment your choice + why, in the code):
+       - A line's embedding.size() != expected_dim_: reject whole file,
+         or skip line + count skips? What does each mean for debugging?
+       - json::parse throws on a malformed line: crash loudly (fine in
+         dev) or catch-and-skip? Make it a CHOICE, not an accident.
+       ------------------------------------------------------------------ */
+    /*
+        // Mirrors ONE line of ingestion's output/chunks.jsonl exactly:
+        // {"chunk_index": 0, "text": "...", "source_document": "...",
+        //  "page_number": 1, "embedding": [ ... 384 floats ... ]}
+    */
+
+    std::string readText = "";
+    
+    std::ifstream MyReadFile("output/chunks.jsonl");
+    if (!std::ifstream::is_open()){
+        std::printf();
+    }
+
+
+    while(getline (MyReadFile, readText)) {
+
+
+
+    }
+
+
+    //open file
+    //parse each line into documentchunk
+    //fill the storage
+
+
+
+
+    return false; 
 }
 
 std::vector<SearchResult> VectorStore::search(
@@ -121,7 +170,6 @@ float VectorStore::magnitude(const std::vector<float>& vec) const {
 
         return dotProductSum;
     }
-
 
 //Each vector has 384 dimensions
 //We are generating a single float value PER query, -1 - 1 ranking  

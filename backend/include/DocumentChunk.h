@@ -2,8 +2,6 @@
 #include <string>
 #include <vector>
 
-
-
 // Mirrors ONE line of ingestion's output/chunks.jsonl exactly:
 // {"chunk_index": 0, "text": "...", "source_document": "...",
 //  "page_number": 1, "embedding": [ ... 384 floats ... ]}
