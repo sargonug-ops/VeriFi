@@ -3,18 +3,17 @@ import { toBackendChatResponse } from "../api/normalize";
 import type { HealthResponse } from "../api/types";
 import { getMockResponse } from "./data";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
-
+// Match absolute or relative /api paths from any page (/, /chat, /chat?q=...).
 export const handlers = [
-  http.get(`${API_BASE_URL}/health`, () => {
+  http.get("*/api/health", () => {
     return HttpResponse.json<HealthResponse>({ status: "ok" });
   }),
 
-  http.post(`${API_BASE_URL}/chat`, async ({ request }) => {
+  http.post("*/api/chat", async ({ request }) => {
     const body = (await request.json()) as { query?: string };
     const query = body.query ?? "";
 
-    await delay(800);
+    await delay(600);
 
     return HttpResponse.json(toBackendChatResponse(getMockResponse(query)));
   }),

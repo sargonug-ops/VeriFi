@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import type { Dispatch, SetStateAction } from "react";
 import { postChat } from "../api/chat";
 import type { SourceCitation } from "../api/types";
 
@@ -13,14 +14,16 @@ export function useChat() {
 
   function sendMessage(
     message: string,
-    onSuccess: (messages: ChatMessage[]) => void,
-    currentMessages: ChatMessage[],
+    setMessages: Dispatch<SetStateAction<ChatMessage[]>>,
   ) {
     const trimmed = message.trim();
-    if (!trimmed || mutation.isPending) return;
+    if (!trimmed || mutation.isPending) return false;
 
     const userMessage: ChatMessage = { role: "user", content: trimmed };
-    const withUser = [...currentMessages, userMessage];
+
+    // Show the user message immediately so the UI never looks "stuck" if the
+    // request fails or is interrupted during a landing-page redirect.
+    setMessages((prev) => [...prev, userMessage]);
 
     mutation.mutate(
       { query: trimmed },
@@ -31,10 +34,12 @@ export function useChat() {
             content: response.answer,
             sources: response.sources,
           };
-          onSuccess([...withUser, assistantMessage]);
+          setMessages((prev) => [...prev, assistantMessage]);
         },
       },
     );
+
+    return true;
   }
 
   return {
