@@ -2,7 +2,7 @@
 
 Author: Divya Machiraju  
 Role: Prompting + QA  
-Sprint: Sprint 2
+Sprint: Sprint 3
 
 ## Goal
 
