@@ -16,7 +16,7 @@ int main() {
         std::cerr << "load failed\n";
         return 1;
     }
-    std::cout << "chunks=" << store.size()
+    std::cout << "chunks=" << store.fetchSize()
               << " dim=" << store.dimension() << "\n";
     // Expected with ingestion's sample PDF: chunks=17, dim=384.
 

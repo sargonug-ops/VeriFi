@@ -26,14 +26,14 @@ bool VectorStore::load_from_jsonl(const std::string& filepath) {
         if(readText == "") continue;
         
         try{
-            nlohmann::json j = nlohmann::json::parse(line);
+            nlohmann::json j = nlohmann::json::parse(readText);
             chunk.chunk_index = j["chunk_index"].get<int>();
             chunk.text = j["text"].get<std::string>();
             chunk.source_document = j["source_document"].get<std::string>();
             chunk.page_number = j["page_number"].get<int>();
             chunk.embedding = j["embedding"].get<std::vector<float>>();
     
-            if (chunk.embedding.size() != static_cast<std::size_t>expected_dim_) {
+            if (chunk.embedding.size() != static_cast<std::size_t>(expected_dim_)) {
                 skipped++; 
                 continue;
             }
@@ -74,7 +74,7 @@ std::vector<SearchResult> VectorStore::search(
                 if (storage[index].embedding.empty()) continue;
                 if (storage[index].embedding.size() != expected_dim_) continue;
                 
-                float score = cosine_similarity(query_embedding, static_cast<std::size_t>storage[index].embedding);
+                float score = cosine_similarity(query_embedding, storage[index].embedding);
                 score_pair.push_back(std::make_pair(score, index));
             
             }
@@ -82,12 +82,12 @@ std::vector<SearchResult> VectorStore::search(
             //lambda function for sorting by descending - sort<> defaults to ascends
             std::sort(score_pair.begin(), score_pair.end(), 
             [](const std::pair<float, std::size_t>& a, const std::pair<float, std::size_t>& b)
-            {return a.first > b.first});
+            {return a.first > b.first;});
 
             //remove later
             if(score_pair.size() > 2){
                 if(!(score_pair[0].first > score_pair[1].first)){
-                    std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1]);
+                    std::printf("error in sorting...\nscore_pair[0] = %f !> score_pair[1] = %f\n", score_pair[0].first, score_pair[1].first);
                 }
             }
 
@@ -121,7 +121,7 @@ std::size_t VectorStore::fetchSize() const {
 //Get width of embedding
 int VectorStore::dimension() const {
     if (storage.empty()) return 0;
-    return static_cast<int>storage[0].embedding.size();
+    return static_cast<int>(storage[0].embedding.size());
 }
 
 float VectorStore::magnitude(const std::vector<float>& vec) const {
@@ -137,7 +137,7 @@ float VectorStore::magnitude(const std::vector<float>& vec) const {
     return std::sqrt(squareSum);
 }
 
-    float const VectorStore::dotProduct(const std::vector<float>& vec1, const std::vector<float>& vec2){
+    float VectorStore::dotProduct(const std::vector<float>& vec1, const std::vector<float>& vec2) const {
 
         if (vec1.empty() || vec2.empty()) return 0.0f;
         //Update to disclude this chunk in order to avoid polluting data 
