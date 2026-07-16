@@ -1,6 +1,9 @@
 # VeriFi Frontend
 
-React chat UI for the VeriFi RAG pipeline. Sends policy questions to the FastAPI backend and displays grounded answers with source citations.
+React chat UI for the VeriFi RAG pipeline. Landing page → chat handoff, grounded
+answers with source citations, and optional MSW mocks for offline / Pages demos.
+
+**Live site:** [https://kurisuo.github.io/VeriFi/](https://kurisuo.github.io/VeriFi/)
 
 ## Setup
 
@@ -27,10 +30,27 @@ The app runs at `http://localhost:5173` by default.
    cd backend
    python3 -m venv venv && source venv/bin/activate
    pip install -r requirements.txt
-   uvicorn main:app --reload --port 8000
+   uvicorn --app-dir src main:app --reload --port 8000
    ```
 2. Set `VITE_USE_MOCKS=false` in `.env`
 3. Keep `VITE_API_URL=/api` — the Vite proxy forwards `/api/*` to `localhost:8000` without requiring CORS changes
+
+## GitHub Pages
+
+Pushes to `main` run [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml),
+which builds **this** `frontend/` directory and deploys `frontend/dist`.
+
+CI build env (set in the workflow — do not rely on a local `.env` for Pages):
+
+| Variable | CI value | Why |
+|----------|----------|-----|
+| `GITHUB_PAGES` | `true` | Sets Vite `base` to `/VeriFi/` and copies `index.html` → `404.html` for SPA routes |
+| `VITE_USE_MOCKS` | `true` | Pages is static; no FastAPI host |
+| `VITE_API_URL` | `/api` | Matches the mock worker / client base URL |
+
+After merge, confirm the latest commit appears under **Actions → Deploy frontend
+to GitHub Pages**, then hard-refresh the live URL (Pages can cache for a few
+minutes). Manual redeploy: **Actions → Run workflow**.
 
 ## API contract (FastAPI — `backend/src/main.py`)
 

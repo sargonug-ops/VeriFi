@@ -1,6 +1,8 @@
 # VeriFi
 
-A C++ and React RAG chatbot that grounds answers in verified policy documents
+A C++ and React RAG chatbot that grounds answers in verified policy documents.
+
+**Live demo (GitHub Pages):** [https://kurisuo.github.io/VeriFi/](https://kurisuo.github.io/VeriFi/)
 
 ## Problem Statement
 
@@ -35,23 +37,109 @@ hallucination, though it does not eliminate it.
 
 ## Project Goals
 
-1. Build a Custom Vector Database: Implement a ultra-fast semantic vector database from scratch (a lightweight varient of Pinecone) that locates documents based on geometric meaning rather than simple text matching.
+1. **Custom vector database:** Implement a fast semantic vector store from scratch (a lightweight Pinecone-style engine) that locates documents by geometric meaning rather than keyword matching.
 
-2. Implement an End-to-End RAG Pipeline: Seamlessly integrate the C++ search engine into a full-stack Retrieval-Augmented Generation pipeline (similar to LangChain) to reduce AI hallucinations by grounding responses in verified facts.
+2. **End-to-end RAG pipeline:** Integrate the C++ search engine into a full-stack Retrieval-Augmented Generation flow that reduces hallucinations by grounding responses in verified facts.
 
-3. Maintain a Focused Scope: Restrict the dataset to official policy documents available from Fidelity Investments to keep scope tight and demo-able within the development cycle.
+3. **Focused scope:** Restrict the dataset to official policy documents available from Fidelity Investments so the project stays demoable within the development cycle.
 
+## Tech Stack
 
-## Tech Stack & Divison of Roles
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, TypeScript, Vite, React Router, TanStack Query |
+| Backend API | FastAPI (`GET /health`, `POST /chat`) |
+| Vector store | C++17 in-memory cosine k-NN (`VectorStore`) |
+| Ingestion | Python, PyMuPDF, Sentence Transformers (`all-MiniLM-L6-v2`, 384-dim) |
+| Hosting | GitHub Pages (static frontend + MSW mocks) |
 
-Planned Stack: C++, React, Embedding API / LLM API 
+## Repository layout
 
-1. Data Ingestion Lead [Srushti]: Sources public PDFs, writes parsing scripts to chunk dense text, and generates the initial vector embeddings.
+```text
+frontend/          React chat UI (landing + chat, citations, MSW mocks)
+backend/           FastAPI bridge + C++ VectorStore (headers, src, tests)
+data_ingestion/    PDF → chunks → embeddings → output/chunks.jsonl
+source_files/      Source policy PDFs
+.github/workflows/ Deploy frontend to GitHub Pages on every push to main
+```
 
-2. Vector Store Engineer / Project Owner [ChristopherZarraga]: Designs the C++ memory structures, implements the cosine-similarity math, and optimizes the O(N) ranking.
+## Quick start
 
-3. API / Backend Bridge [Ethan]: Implements the cpp-httplib C++ server, handles JSON serialization, and manages asynchronous network calls to the embedding and LLM APIs.
+### Frontend (local)
 
-4. Frontend React Developer []: Builds the React chat dashboard, handles loading states, and renders the conversational UI with dynamic source citations.
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
 
-5. Integration, Prompting & QA []: Designs system prompts to keep the LLM grounded in retrieved text, tests edge cases, manages GitHub version control, and prepares the live final demonstration.
+App: `http://localhost:5173`
+
+By default `VITE_USE_MOCKS=true`, so the UI works without a running backend.
+See [`frontend/README.md`](frontend/README.md) for connecting to FastAPI.
+
+### Backend API (local)
+
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn --app-dir src main:app --reload --port 8000
+```
+
+Health check: `http://localhost:8000/health`  
+Swagger: `http://localhost:8000/docs`
+
+Full backend + C++ vector-store setup: [`backend/SETUP.md`](backend/SETUP.md)
+
+### Data ingestion (regenerate chunks)
+
+From the repo root:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python data_ingestion/main.py
+```
+
+Details: [`data_ingestion/README.md`](data_ingestion/README.md)
+
+## GitHub Pages deployment
+
+Every push to `main` builds the **current** `frontend/` tree and publishes it to
+GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+| Setting | Value |
+|---------|--------|
+| Live URL | https://kurisuo.github.io/VeriFi/ |
+| Trigger | Push to `main`, or manual **workflow_dispatch** |
+| Build | `npm ci && npm run build` in `frontend/` |
+| Base path | `/VeriFi/` (`GITHUB_PAGES=true`) |
+| API mode | `VITE_USE_MOCKS=true` (static host; no FastAPI on Pages) |
+
+What this means in practice:
+
+- Merging frontend changes to `main` is enough — the workflow rebuilds from
+  source, so Pages always reflects the latest committed UI (not a checked-in
+  `dist/` folder).
+- The Pages site uses MSW mock chat responses. For a live FastAPI / C++ RAG
+  stack, run the apps locally as above.
+- SPA routes (`/chat`) work on Pages because the build copies `index.html` to
+  `404.html`.
+
+To redeploy without a code change: GitHub → **Actions** → **Deploy frontend to
+GitHub Pages** → **Run workflow**.
+
+## Team roles
+
+1. **Data Ingestion** [Srushti]: Sources public PDFs, chunks text, generates embeddings into `chunks.jsonl`.
+
+2. **Vector Store / Project Owner** [ChristopherZarraga]: C++ memory structures, cosine similarity, O(N) ranking, load/search APIs.
+
+3. **API / Backend Bridge** [Ethan]: FastAPI server, JSON contract, CORS, wiring to embedding/LLM services.
+
+4. **Frontend** : React chat dashboard, landing → chat handoff, loading states, source citations.
+
+5. **Integration, Prompting & QA** : Grounding prompts, edge-case testing, GitHub/Pages release readiness, live demo.
