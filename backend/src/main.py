@@ -19,11 +19,17 @@ from pydantic import BaseModel, Field
 
 # Allow imports from backend/retrieval when running from backend/src/
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BACKEND_DIR.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+PROMPTS_DIR = REPO_ROOT / "prompts"
+if str(PROMPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(PROMPTS_DIR))
+
 from retrieval import embedder, fallback_search, mapper, vector_client  # noqa: E402
 from retrieval.config import CHUNKS_PATH, SEARCH_CLI_PATH  # noqa: E402
+from rag_pipeline import generate_rag_response  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +160,7 @@ def chat(request: ChatRequest):
             "sources": [],
         }
 
-    count = len(sources)
-    if count == 0:
+    if not sources:
         return {
             "answer": (
                 f"No relevant passages found for: \"{request.query}\". "
@@ -165,12 +170,16 @@ def chat(request: ChatRequest):
             "sources": [],
         }
 
-    engine = "C++ VectorStore" if _use_cpp_cli else "Python fallback (pending C++ CLI)"
+    try:
+        rag = generate_rag_response(request.query, raw_results)
+    except Exception as exc:
+        logger.exception("LLM generation failed")
+        return {
+            "answer": f"Answer generation failed: {exc}",
+            "sources": sources,
+        }
+
     return {
-        "answer": (
-            f"Found {count} relevant passage{'s' if count != 1 else ''} "
-            f"for your query. [{engine}] "
-            "LLM answer generation will be added in a later story."
-        ),
+        "answer": rag["answer"],
         "sources": sources,
     }
