@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build VectorStore test",
+      "type": "shell",
+      "command": "C:/msys64/ucrt64/bin/g++.exe",
+      "args": [
+        "-std=c++17",
+        "-Iinclude",
+        "-Ilib",
+        "src/VectorStore.cpp",
+        "tests/test_vectorstore.cpp",
+        "-o",
+        "test_vs"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Build search_cli",
+      "type": "shell",
+      "command": "C:/msys64/ucrt64/bin/g++.exe",
+      "args": [
+        "-std=c++17",
+        "-Iinclude",
+        "-Ilib",
+        "src/VectorStore.cpp",
+        "src/search_cli.cpp",
+        "-o",
+        "search_cli"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "problemMatcher": "$gcc"
+    }
+  ]
+}

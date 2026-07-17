@@ -1,0 +1,70 @@
+# .gitattributes — line-ending and file-type policy for the whole team.
+# Goal: everyone commits the SAME bytes regardless of OS, so no more
+# "the entire file changed" diffs or phantom merge conflicts from CRLF/LF.
+
+# ---------------------------------------------------------------------------
+# 1. Default rule for every file
+# ---------------------------------------------------------------------------
+# text=auto  -> git decides per file whether it's text (and worth normalizing)
+# eol=lf     -> for those text files, store LF in the repo. Windows editors
+#               can still show/edit CRLF locally; git normalizes on commit.
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
+# 2. Source files — force LF explicitly (belt-and-suspenders over the default)
+# ---------------------------------------------------------------------------
+*.cpp   text eol=lf
+*.hpp   text eol=lf
+*.h     text eol=lf
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.json  text eol=lf
+*.jsonl text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+CMakeLists.txt text eol=lf
+
+# ---------------------------------------------------------------------------
+# 3. Windows-only scripts — these genuinely REQUIRE CRLF to run correctly
+# ---------------------------------------------------------------------------
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# ---------------------------------------------------------------------------
+# 4. Vendored third-party code — hands off
+# ---------------------------------------------------------------------------
+# -text            -> disable ALL line-ending conversion (leave bytes exactly
+#                     as shipped by nlohmann; never rewrite their file)
+# linguist-vendored -> GitHub excludes it from the repo's language stats, so
+#                     json.hpp's 25k lines don't make the repo look "mostly C++
+#                     library." Cosmetic, but honest.
+# Path shown is a guess — adjust to wherever json.hpp actually lives.
+**/lib/json.hpp -text linguist-vendored
+
+# ---------------------------------------------------------------------------
+# 5. Binary files — MUST be marked, or git will corrupt them trying to
+#    "normalize" line endings inside binary data. Your source_files/ PDFs
+#    are the real risk here.
+# ---------------------------------------------------------------------------
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.zip   binary
+*.gz    binary
+*.o     binary
+*.a     binary
+*.so    binary
+*.dylib binary
+*.exe   binary
