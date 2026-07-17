@@ -8,38 +8,38 @@ to `output/chunks.jsonl` for the C++ vector store.
 
 Use this file as the vector database input:
 
-```text
-output/chunks.jsonl
-```
+Do not parse the entire file as one JSON object.
 
 Each line is one complete JSON object. Read the file line-by-line, parse each
 line as JSON, and load each record into the vector store.
 
-Current output schema:
+Each line has this shape:
 
 ```json
 {
   "chunk_index": 0,
-  "text": "...",
+  "text": "1 TERMS AND CONDITIONS For purposes of these Terms and Conditions...",
   "source_document": "terms-and-conditions.pdf",
   "page_number": 1,
-  "embedding": [0.0267, -0.0358, -0.072]
+  "embedding": [0.0267649535, -0.0358008891, -0.072021015]
 }
 ```
 
-Fields:
+Field contract:
 
-- `chunk_index`: zero-based chunk ID within the generated output file
-- `text`: chunk text to display or pass into RAG context
-- `source_document`: original PDF filename
-- `page_number`: one-based PDF page number for citation/debugging
-- `embedding`: numeric vector for semantic search
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `chunk_index` | integer | Zero-based chunk ID in the combined output file |
+| `text` | string | Human-readable chunk text to use in RAG context |
+| `source_document` | string | Original PDF filename |
+| `page_number` | integer | One-based page number from the source PDF |
+| `embedding` | array of numbers | Vector representation of `text` |
 
 For the current model (`all-MiniLM-L6-v2`), embeddings have length `384`.
 
 ## How to regenerate
 
-Run all commands from the repo root.
+## Suggested Role 2 Data Shape
 
 ```bash
 python3 -m venv .venv
@@ -48,21 +48,30 @@ pip install -r requirements.txt
 python data_ingestion/main.py
 ```
 
-Expected output for the current sample PDF:
+Expected current validation:
 
 ```text
-Pages: 3
-Chunks: 17
-Output written to: output/chunks.jsonl
+records: 35
+missing required fields: 0
+empty text chunks: 0
+contiguous chunk indexes: True
+documents: {'privacy.pdf': 18, 'terms-and-conditions.pdf': 17}
+pages by document: {'privacy.pdf': {1: 8, 2: 5, 3: 5}, 'terms-and-conditions.pdf': {1: 6, 2: 7, 3: 4}}
+embedding lengths: {384: 35}
+all embedding values numeric: True
 ```
 
 The first run may take longer because `sentence-transformers` downloads the
 embedding model.
 
-## Input PDF
+## Format Stability
 
 ```text
-source_files/terms-and-conditions.pdf
+chunk_index
+text
+source_document
+page_number
+embedding
 ```
 
 The pipeline is configured for this PDF in `data_ingestion/main.py`.
